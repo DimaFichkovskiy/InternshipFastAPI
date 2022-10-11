@@ -10,3 +10,13 @@ To automatically restart the project when making changes during local developmen
 ```shell
 uvicorn app.main:app --reload
 ```
+
+## Using Docker
+Creating a Docker image:
+```shell
+docker build -t internimage .
+```
+Start the Docker Container:
+```shell
+docker build --name interncontainer -p 8000:8000 internimage
+```
