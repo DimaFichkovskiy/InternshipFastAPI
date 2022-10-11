@@ -20,3 +20,7 @@ Start the Docker Container:
 ```shell
 docker build --name interncontainer -p 8000:8000 internimage
 ```
+ Run using docker-compose:
+```shell
+docker-compose up --build web
+```
