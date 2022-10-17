@@ -1,14 +1,21 @@
+import os
+import logging.config
 import databases
 import aioredis
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import POSTGRES_URL, REDIS_URL
+from src.config import Config
+from src.auth import router as auth_router
+from src.users import router as user_router
 
-db = databases.Database(POSTGRES_URL)
+db = databases.Database(Config.POSTGRES_URL)
 
 app = FastAPI()
+
+app.include_router(auth_router)
+app.include_router(user_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,11 +27,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+logging.config.fileConfig("logging.ini")
+logger = logging.getLogger()
+
 
 @app.on_event("startup")
 async def startup():
+    logger.info("START")
     await db.connect()
-    app.state.redis = await aioredis.from_url(REDIS_URL)
+    app.state.redis = await aioredis.from_url(Config.REDIS_URL)
 
 
 @app.on_event("shutdown")
