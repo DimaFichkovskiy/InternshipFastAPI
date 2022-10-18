@@ -27,13 +27,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-logging.config.fileConfig("logging.ini")
-logger = logging.getLogger()
+# logging.config.fileConfig("logging.ini")
+# logger = logging.getLogger()
 
 
 @app.on_event("startup")
 async def startup():
-    logger.info("START")
+    # logger.info("START")
     await db.connect()
     app.state.redis = await aioredis.from_url(Config.REDIS_URL)
 

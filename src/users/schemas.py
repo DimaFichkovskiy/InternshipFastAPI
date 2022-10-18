@@ -4,16 +4,27 @@ from pydantic import BaseModel, EmailStr
 
 
 class User(BaseModel):
-    user_id: int
-    full_name: str
+    id: int
+    first_name: str
+    last_name: str
     email: EmailStr
 
+    class Config:
+        orm_mode = True
 
-class Users(BaseModel):
-    page: int
-    users: list[User]
+
+class Page(BaseModel):
+    page: int = 0
+
+
+class Users(Page):
+    users: list[User] = []
+
+    class Config:
+        orm_mode = True
 
 
 class UserUpdate(BaseModel):
-    full_name: Union[str, None] = None
-    email: Union[str, None] = None
+    first_name: Union[str, None] = None
+    last_name: Union[str, None] = None
+    email: Union[EmailStr, None] = None
