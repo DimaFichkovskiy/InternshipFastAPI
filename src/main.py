@@ -5,6 +5,7 @@ import aioredis
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_pagination import add_pagination
 
 from src.config import Config
 from src.auth import router as auth_router
@@ -16,6 +17,8 @@ app = FastAPI()
 
 app.include_router(auth_router)
 app.include_router(user_router)
+
+add_pagination(app)
 
 app.add_middleware(
     CORSMiddleware,

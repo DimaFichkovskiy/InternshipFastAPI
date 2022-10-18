@@ -13,11 +13,7 @@ class User(BaseModel):
         orm_mode = True
 
 
-class Page(BaseModel):
-    page: int = 0
-
-
-class Users(Page):
+class Users(BaseModel):
     users: list[User] = []
 
     class Config:
@@ -27,4 +23,6 @@ class Users(Page):
 class UserUpdate(BaseModel):
     first_name: Union[str, None] = None
     last_name: Union[str, None] = None
-    email: Union[EmailStr, None] = None
+
+    class Config:
+        orm_mode = True
