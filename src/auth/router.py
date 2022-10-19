@@ -25,8 +25,4 @@ async def sign_up(new_user: SignUp, db: AsyncSession = Depends(get_db_session)):
     if email_exist:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    elif new_user.password != new_user.confirm_password:
-        raise HTTPException(status_code=400, detail="Сonfirm password does not match password")
-
-    await crud.UserCRUD.create_user(db=db, user=new_user)
-    return new_user
+    return await crud.UserCRUD.create_user(db=db, user=new_user)

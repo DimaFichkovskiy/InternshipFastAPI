@@ -1,9 +1,12 @@
-from sqlalchemy import select, update
+from sqlalchemy import select
+from passlib.context import CryptContext
 
 from .database import AsyncSession
 from .users import models
 from .users.schemas import UserUpdate
 from .auth.schemas import SignUp
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class UserCRUD:
@@ -25,13 +28,13 @@ class UserCRUD:
 
     @classmethod
     async def create_user(cls, db: AsyncSession, user: SignUp):
-        fake_hashed_password = user.password + "notreallyhashed"
+        hashed_password = pwd_context.hash(user.password)
 
         db_user = models.User(
             first_name=user.first_name,
             last_name=user.last_name,
             email=user.email,
-            hashed_password=fake_hashed_password
+            hashed_password=hashed_password
         )
 
         db.add(db_user)
@@ -41,14 +44,19 @@ class UserCRUD:
 
     @classmethod
     async def update_user(cls, db: AsyncSession, user_id: int, update_data: UserUpdate):
-        await db.execute(update(models.User).filter(models.User.id == user_id).values(
-            update_data.dict(exclude_none=True)
-        ))
+        user = await cls.get_user(db=db, user_id=user_id)
+
+        if update_data.first_name is not None:
+            user.first_name = update_data.first_name
+        if update_data.last_name is not None:
+            user.last_name = update_data.last_name
+
         await db.commit()
+        await db.refresh(user)
+        return user
 
     @classmethod
     async def delete_user(cls, db: AsyncSession, user_id: int):
-        deleted_user = await db.execute(select(models.User).filter(models.User.id == user_id))
-        deleted_user = deleted_user.scalars().first()
-        await db.delete(deleted_user)
+        user = await cls.get_user(db=db, user_id=user_id)
+        await db.delete(user)
         await db.commit()

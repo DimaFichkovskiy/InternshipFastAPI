@@ -26,14 +26,13 @@ async def read_user(user_id: int, db: AsyncSession = Depends(get_db_session)):
     return user
 
 
-@router.patch("/{user_id}", status_code=200)
+@router.patch("/{user_id}", response_model=User)
 async def update_user(user_update_data: UserUpdate, user_id: int, db: AsyncSession = Depends(get_db_session)):
     user_exist = await crud.UserCRUD.get_user(db, user_id=user_id)
     if not user_exist:
         raise HTTPException(status_code=400, detail="The user does not exist")
 
-    await crud.UserCRUD.update_user(db=db, user_id=user_id, update_data=user_update_data)
-    raise HTTPException(status_code=200, detail="Successfully update")
+    return await crud.UserCRUD.update_user(db=db, user_id=user_id, update_data=user_update_data)
 
 
 @router.delete("/{user_id}", status_code=200)
@@ -43,4 +42,4 @@ async def delete_user(user_id: int, db: AsyncSession = Depends(get_db_session)):
         raise HTTPException(status_code=400, detail="The user does not exist")
 
     await crud.UserCRUD.delete_user(db=db, user_id=user_id)
-    raise HTTPException(status_code=200, detail="Successfully deleted")
+    return {"status": "OK", "code": "200", "message": "Success delete data"}
