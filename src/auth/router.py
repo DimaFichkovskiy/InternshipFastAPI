@@ -1,5 +1,11 @@
-from fastapi import APIRouter
+import email
+
+from fastapi import APIRouter, Depends, HTTPException
+
+from src import crud
+from src.database import AsyncSession, get_db_session
 from .schemas import SignUp, SignIn
+from src.users.schemas import User
 
 router = APIRouter(
     prefix="/auth",
@@ -9,10 +15,14 @@ router = APIRouter(
 
 
 @router.post("/login")
-def sign_in(sign_in_model: SignIn):
+def sign_in():
     pass
 
 
-@router.post("/register")
-def sign_up(sign_up_model: SignUp):
-    pass
+@router.post("/register", status_code=201, response_model=User)
+async def sign_up(new_user: SignUp, db: AsyncSession = Depends(get_db_session)):
+    email_exist = await crud.UserCRUD.get_user_by_email(db, email=new_user.email)
+    if email_exist:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    return await crud.UserCRUD.create_user(db=db, user=new_user)
