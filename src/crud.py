@@ -4,7 +4,7 @@ from passlib.context import CryptContext
 from .database import AsyncSession
 from .users import models
 from .users.schemas import UserUpdate
-from .auth.schemas import SignUp
+from .auth.schemas import SignUp, SignIn
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -60,3 +60,12 @@ class UserCRUD:
         user = await cls.get_user(db=db, user_id=user_id)
         await db.delete(user)
         await db.commit()
+
+    @classmethod
+    async def authenticate(cls, db: AsyncSession, login_data: SignIn):
+        user = await cls.get_user_by_email(db=db, email=login_data.email)
+        if not user:
+            return None
+        if not pwd_context.verify(login_data.password, user.hashed_password):
+            return None
+        return user
