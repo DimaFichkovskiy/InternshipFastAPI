@@ -31,5 +31,5 @@ async def get_current_user(
 
     user = await UserCRUD.get_user_by_email(db=db, email=pyload_from_auth.get("email"))
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        user = await UserCRUD.create_user_by_email(db=db, email=pyload_from_auth.get("email"))
     return user

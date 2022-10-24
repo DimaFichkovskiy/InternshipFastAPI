@@ -8,8 +8,8 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
-    first_name = Column(String)
-    last_name = Column(String)
+    first_name = Column(String, default=None)
+    last_name = Column(String, default=None)
     email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
+    hashed_password = Column(String, default=None)
     date_created = Column(DateTime(timezone=True), default=func.now())

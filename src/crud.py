@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional
 from sqlalchemy import select
 from passlib.context import CryptContext
 
@@ -44,6 +44,16 @@ class UserCRUD:
         return db_user
 
     @classmethod
+    async def create_user_by_email(cls, db: AsyncSession, email: str):
+        db_user = models.User(
+            email=email
+        )
+        db.add(db_user)
+        await db.commit()
+        await db.refresh(db_user)
+        return db_user
+
+    @classmethod
     async def update_user(cls, db: AsyncSession, user_id: int, update_data: UserUpdate):
         user = await cls.get_user(db=db, user_id=user_id)
 
@@ -63,7 +73,7 @@ class UserCRUD:
         await db.commit()
 
     @classmethod
-    async def authenticate(cls, db: AsyncSession, login_data: SignIn) -> Union[models.User, None]:
+    async def authenticate(cls, db: AsyncSession, login_data: SignIn) -> Optional[models.User]:
         user = await cls.get_user_by_email(db=db, email=login_data.email)
         if not user:
             return None

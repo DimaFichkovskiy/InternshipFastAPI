@@ -5,8 +5,8 @@ from pydantic import BaseModel, EmailStr
 
 class User(BaseModel):
     id: int
-    first_name: str
-    last_name: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     email: EmailStr
 
     class Config:
