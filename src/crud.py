@@ -1,10 +1,11 @@
+from typing import Union
 from sqlalchemy import select
 from passlib.context import CryptContext
 
 from .database import AsyncSession
-from .users import models
-from .users.schemas import UserUpdate
-from .auth.schemas import SignUp, SignIn
+from src.schemas.user import UserUpdate
+from src.schemas.auth import SignUp, SignIn
+from src import models, security
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -28,7 +29,7 @@ class UserCRUD:
 
     @classmethod
     async def create_user(cls, db: AsyncSession, user: SignUp):
-        hashed_password = pwd_context.hash(user.password)
+        hashed_password = await security.get_password_hash(user.password)
 
         db_user = models.User(
             first_name=user.first_name,
@@ -62,10 +63,10 @@ class UserCRUD:
         await db.commit()
 
     @classmethod
-    async def authenticate(cls, db: AsyncSession, login_data: SignIn):
+    async def authenticate(cls, db: AsyncSession, login_data: SignIn) -> Union[models.User, None]:
         user = await cls.get_user_by_email(db=db, email=login_data.email)
         if not user:
             return None
-        if not pwd_context.verify(login_data.password, user.hashed_password):
+        if not await security.verify_password(login_data.password, user.hashed_password):
             return None
         return user

@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
@@ -13,16 +13,9 @@ class User(BaseModel):
         orm_mode = True
 
 
-class Users(BaseModel):
-    users: list[User] = []
-
-    class Config:
-        orm_mode = True
-
-
 class UserUpdate(BaseModel):
-    first_name: Union[str, None] = None
-    last_name: Union[str, None] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
 
     class Config:
         orm_mode = True

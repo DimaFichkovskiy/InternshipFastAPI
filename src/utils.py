@@ -3,18 +3,15 @@ from src.config import Config
 
 
 class VerifyToken:
-    """Does all the token verification using PyJWT"""
-
     def __init__(self, token):
         self.token = token
-        self.config = Config.set_up_auth0()
+        self.config = Config
         self.signing_key = None
 
-        jwks_url = f'https://{self.config["DOMAIN"]}/.well-known/jwks.json'
+        jwks_url = f'https://{self.config.set_up_auth0()["DOMAIN"]}/.well-known/jwks.json'
         self.jwks_client = jwt.PyJWKClient(jwks_url)
 
-    def verify(self):
-        # This gets the 'kid' from the passed token
+    async def verify_token_from_auth0(self):
         try:
             self.signing_key = self.jwks_client.get_signing_key_from_jwt(self.token).key
 
@@ -28,9 +25,21 @@ class VerifyToken:
             payload = jwt.decode(
                 self.token,
                 self.signing_key,
-                algorithms=self.config["ALGORITHMS"],
-                audience=self.config["API_AUDIENCE"],
-                issuer=self.config["ISSUER"],
+                algorithms=self.config.set_up_auth0()["ALGORITHMS"],
+                audience=self.config.set_up_auth0()["API_AUDIENCE"],
+                issuer=self.config.set_up_auth0()["ISSUER"],
+            )
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+        return payload
+
+    async def verify_token_from_me(self):
+        try:
+            payload = jwt.decode(
+                self.token,
+                self.config.SECRET_KEY,
+                algorithms=[self.config.ENCODE_ALGORITHM]
             )
         except Exception as e:
             return {"status": "error", "message": str(e)}
