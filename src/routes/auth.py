@@ -18,22 +18,23 @@ router = APIRouter(
 
 
 @router.post("/login", status_code=200, response_model=schemas.Token)
-async def sign_in(user_login_data: schemas.SignIn, db: AsyncSession = Depends(get_db_session),):
+async def sign_in(user_login_data: schemas.SignIn, db: AsyncSession = Depends(get_db_session)) -> schemas.Token:
     user = await crud.UserCRUD.authenticate(db=db, login_data=user_login_data)
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     access_token_expires = timedelta(minutes=Config.ACCESS_TOKEN_EXPIRE_MINUTES)
     token = await security.create_access_token(user.email, expires_delta=access_token_expires)
-    return {"access_token": token, "token_type": "bearer"}
+    schemas.Token.access_token = token
+    return schemas.Token
 
 
 @router.get("/login/me", response_model=schemas.User)
-async def get_me(current_user: models.User = Depends(get_current_user)):
+async def get_me(current_user: models.User = Depends(get_current_user)) -> schemas.User:
     return current_user
 
 
 @router.post("/register", status_code=201, response_model=schemas.Token)
-async def sign_up(new_user: schemas.SignUp, db: AsyncSession = Depends(get_db_session)):
+async def sign_up(new_user: schemas.SignUp, db: AsyncSession = Depends(get_db_session)) -> schemas.Token:
     email_exist = await crud.UserCRUD.get_user_by_email(db, email=new_user.email)
     if email_exist:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -56,4 +57,5 @@ async def sign_up(new_user: schemas.SignUp, db: AsyncSession = Depends(get_db_se
     user = await crud.UserCRUD.create_user(db=db, user=new_user)
     access_token_expires = timedelta(minutes=Config.ACCESS_TOKEN_EXPIRE_MINUTES)
     token = await security.create_access_token(user.email, expires_delta=access_token_expires)
-    return {"access_token": token, "token_type": "bearer"}
+    schemas.Token.access_token = token
+    return schemas.Token

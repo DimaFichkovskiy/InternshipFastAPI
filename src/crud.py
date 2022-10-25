@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy import select
 from passlib.context import CryptContext
 
@@ -13,22 +13,22 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class UserCRUD:
 
     @classmethod
-    async def get_users(cls, db: AsyncSession, skip: int = 0, limit: int = 100):
+    async def get_users(cls, db: AsyncSession, skip: int = 0, limit: int = 100) -> List[models.User]:
         result = await db.execute(select(models.User).offset(skip).limit(limit))
         return result.scalars().all()
 
     @classmethod
-    async def get_user(cls, db: AsyncSession, user_id: int):
+    async def get_user(cls, db: AsyncSession, user_id: int) -> models.User:
         result = await db.execute(select(models.User).filter(models.User.id == user_id))
         return result.scalars().first()
 
     @classmethod
-    async def get_user_by_email(cls, db: AsyncSession, email: str):
+    async def get_user_by_email(cls, db: AsyncSession, email: str) -> models.User:
         result = await db.execute(select(models.User).filter(models.User.email == email))
         return result.scalars().first()
 
     @classmethod
-    async def create_user(cls, db: AsyncSession, user: SignUp):
+    async def create_user(cls, db: AsyncSession, user: SignUp) -> models.User:
         hashed_password = await security.get_password_hash(user.password)
 
         db_user = models.User(
@@ -44,7 +44,7 @@ class UserCRUD:
         return db_user
 
     @classmethod
-    async def create_user_by_email(cls, db: AsyncSession, email: str):
+    async def create_user_by_email(cls, db: AsyncSession, email: str) -> models.User:
         db_user = models.User(
             email=email
         )
@@ -54,7 +54,7 @@ class UserCRUD:
         return db_user
 
     @classmethod
-    async def update_user(cls, db: AsyncSession, user_id: int, update_data: UserUpdate):
+    async def update_user(cls, db: AsyncSession, user_id: int, update_data: UserUpdate) -> models.User:
         user = await cls.get_user(db=db, user_id=user_id)
 
         if update_data.first_name is not None:
