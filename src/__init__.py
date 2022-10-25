@@ -1,3 +1,3 @@
 from .config import Config
 from .database import Base
-from .users.models import User
+from src.models.user import User

@@ -8,15 +8,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 
 from src.config import Config
-from src.auth import router as auth_router
-from src.users import router as user_router
+from src.routes.auth import router as auth_router
+from src.routes.users import router as users_router
 
 db = databases.Database(Config.POSTGRES_URL)
 
 app = FastAPI()
 
 app.include_router(auth_router)
-app.include_router(user_router)
+app.include_router(users_router)
 
 add_pagination(app)
 

@@ -13,6 +13,7 @@ services:
       - redis
     env_file:
       - .env
+      - .config
     volumes:
       - ./src:/code/src
       - ./alembic:/code/alembic

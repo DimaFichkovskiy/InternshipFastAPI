@@ -1,10 +1,11 @@
+from typing import Optional, List
 from sqlalchemy import select
 from passlib.context import CryptContext
 
 from .database import AsyncSession
-from .users import models
-from .users.schemas import UserUpdate
-from .auth.schemas import SignUp
+from src.schemas.user import UserUpdate
+from src.schemas.auth import SignUp, SignIn
+from src import models, security
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -12,23 +13,23 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class UserCRUD:
 
     @classmethod
-    async def get_users(cls, db: AsyncSession, skip: int = 0, limit: int = 100):
+    async def get_users(cls, db: AsyncSession, skip: int = 0, limit: int = 100) -> List[models.User]:
         result = await db.execute(select(models.User).offset(skip).limit(limit))
         return result.scalars().all()
 
     @classmethod
-    async def get_user(cls, db: AsyncSession, user_id: int):
+    async def get_user(cls, db: AsyncSession, user_id: int) -> models.User:
         result = await db.execute(select(models.User).filter(models.User.id == user_id))
         return result.scalars().first()
 
     @classmethod
-    async def get_user_by_email(cls, db: AsyncSession, email: str):
+    async def get_user_by_email(cls, db: AsyncSession, email: str) -> models.User:
         result = await db.execute(select(models.User).filter(models.User.email == email))
         return result.scalars().first()
 
     @classmethod
-    async def create_user(cls, db: AsyncSession, user: SignUp):
-        hashed_password = pwd_context.hash(user.password)
+    async def create_user(cls, db: AsyncSession, user: SignUp) -> models.User:
+        hashed_password = await security.get_password_hash(user.password)
 
         db_user = models.User(
             first_name=user.first_name,
@@ -43,7 +44,17 @@ class UserCRUD:
         return db_user
 
     @classmethod
-    async def update_user(cls, db: AsyncSession, user_id: int, update_data: UserUpdate):
+    async def create_user_by_email(cls, db: AsyncSession, email: str) -> models.User:
+        db_user = models.User(
+            email=email
+        )
+        db.add(db_user)
+        await db.commit()
+        await db.refresh(db_user)
+        return db_user
+
+    @classmethod
+    async def update_user(cls, db: AsyncSession, user_id: int, update_data: UserUpdate) -> models.User:
         user = await cls.get_user(db=db, user_id=user_id)
 
         if update_data.first_name is not None:
@@ -60,3 +71,12 @@ class UserCRUD:
         user = await cls.get_user(db=db, user_id=user_id)
         await db.delete(user)
         await db.commit()
+
+    @classmethod
+    async def authenticate(cls, db: AsyncSession, login_data: SignIn) -> Optional[models.User]:
+        user = await cls.get_user_by_email(db=db, email=login_data.email)
+        if not user:
+            return None
+        if not await security.verify_password(login_data.password, user.hashed_password):
+            return None
+        return user
