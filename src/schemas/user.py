@@ -13,9 +13,29 @@ class User(BaseModel):
         orm_mode = True
 
 
-class UserUpdate(BaseModel):
+class UserInfoUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+
+    class Config:
+        orm_mode = True
+
+
+class UserPasswordUpdate(BaseModel):
+    password: Optional[str] = None
+
+
+class UpdatePasswordResponse(BaseModel):
+    status_code: int = None
+    body: str = None
+
+    class Config:
+        orm_mode = True
+
+
+class DeleteUserResponse(BaseModel):
+    status_code: int = None
+    body: str = None
 
     class Config:
         orm_mode = True
