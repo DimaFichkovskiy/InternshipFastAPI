@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi_pagination import Page, paginate
 
-from src import crud, models
+from src import crud, models, schemas
 from src.database import AsyncSession, get_db_session
-from src.schemas.user import User, UserUpdate
 from src.routes.dependencies import get_current_user
 
 router = APIRouter(
@@ -13,22 +12,22 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=Page[User])
+@router.get("/", response_model=Page[schemas.User])
 async def read_users(
         skip: int = 0,
         limit: int = 100,
         db: AsyncSession = Depends(get_db_session),
-        current_user: models.User = Depends(get_current_user)
+        current_user: schemas.User = Depends(get_current_user)
 ):
     users = await crud.UserCRUD.get_users(db, skip=skip, limit=limit)
     return paginate(users)
 
 
-@router.get("/{user_id}", response_model=User)
+@router.get("/{user_id}", response_model=schemas.User)
 async def read_user(
         user_id: int,
         db: AsyncSession = Depends(get_db_session),
-        current_user: models.User = Depends(get_current_user)
+        current_user: schemas.User = Depends(get_current_user)
 ):
     user = await crud.UserCRUD.get_user(db, user_id=user_id)
     if user is None:
@@ -36,29 +35,45 @@ async def read_user(
     return user
 
 
-@router.patch("/{user_id}", response_model=User)
-async def update_user(
-        user_update_data: UserUpdate,
-        user_id: int,
+@router.patch("/update_user_info", response_model=schemas.User)
+async def update_user_info(
+        update_data: schemas.UserInfoUpdate,
         db: AsyncSession = Depends(get_db_session),
-        current_user: models.User = Depends(get_current_user)
-):
-    user_exist = await crud.UserCRUD.get_user(db, user_id=user_id)
-    if not user_exist:
-        raise HTTPException(status_code=400, detail="The user does not exist")
+        current_user: schemas.User = Depends(get_current_user)
+) -> schemas.User:
+    print(update_data)
+    if (update_data.first_name and update_data.last_name) is None:
+        raise HTTPException(status_code=400, detail="There is not enough data to update")
 
-    return await crud.UserCRUD.update_user(db=db, user_id=user_id, update_data=user_update_data)
+    return await crud.UserCRUD.update_user_info(db=db, user_id=current_user.id, update_data=update_data)
 
 
-@router.delete("/{user_id}", status_code=200)
+@router.patch("/update_user_password", response_model=schemas.UpdatePasswordResponse, status_code=201)
+async def update_user_password(
+        update_data: schemas.UserPasswordUpdate,
+        db: AsyncSession = Depends(get_db_session),
+        current_user: schemas.User = Depends(get_current_user)
+) -> schemas.UpdatePasswordResponse:
+    if update_data.password is None:
+        raise HTTPException(status_code=400, detail="The password field must not be empty")
+
+    user = await crud.UserCRUD.update_user_password(db=db, user_id=current_user.id, update_data=update_data)
+    if not user:
+        raise HTTPException(status_code=400, detail="The new password matches the old one")
+
+    response = schemas.UpdatePasswordResponse
+    response.status_code = status.HTTP_201_CREATED
+    response.body = "Password successfully updated"
+    return response
+
+
+@router.delete("/delete_me", response_model=schemas.DeleteUserResponse, status_code=200)
 async def delete_user(
-        user_id: int,
-        db: AsyncSession = Depends(get_db_session),
-        current_user: models.User = Depends(get_current_user)
-):
-    user_exist = await crud.UserCRUD.get_user(db, user_id=user_id)
-    if not user_exist:
-        raise HTTPException(status_code=400, detail="The user does not exist")
+        db: AsyncSession = Depends(get_db_session), current_user: schemas.User = Depends(get_current_user)
+) -> schemas.DeleteUserResponse:
+    await crud.UserCRUD.delete_user(db=db, user_id=current_user.id)
 
-    await crud.UserCRUD.delete_user(db=db, user_id=user_id)
-    return {"status": "OK", "code": "200", "message": "Success delete data"}
+    response = schemas.DeleteUserResponse
+    response.status_code = status.HTTP_200_OK
+    response.body = "Success delete user"
+    return response

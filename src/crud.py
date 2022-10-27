@@ -1,11 +1,9 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 from sqlalchemy import select
 from passlib.context import CryptContext
 
 from .database import AsyncSession
-from src.schemas.user import UserUpdate
-from src.schemas.auth import SignUp, SignIn
-from src import models, security
+from src import models, security, schemas
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -28,7 +26,7 @@ class UserCRUD:
         return result.scalars().first()
 
     @classmethod
-    async def create_user(cls, db: AsyncSession, user: SignUp) -> models.User:
+    async def create_user(cls, db: AsyncSession, user: schemas.SignUp) -> models.User:
         hashed_password = await security.get_password_hash(user.password)
 
         db_user = models.User(
@@ -54,7 +52,7 @@ class UserCRUD:
         return db_user
 
     @classmethod
-    async def update_user(cls, db: AsyncSession, user_id: int, update_data: UserUpdate) -> models.User:
+    async def update_user_info(cls, db: AsyncSession, user_id: int, update_data: schemas.UserInfoUpdate) -> models.User:
         user = await cls.get_user(db=db, user_id=user_id)
 
         if update_data.first_name is not None:
@@ -67,13 +65,29 @@ class UserCRUD:
         return user
 
     @classmethod
+    async def update_user_password(
+            cls, db: AsyncSession, user_id: int, update_data: schemas.UserPasswordUpdate
+    ) -> Union[models.User, bool]:
+        user = await cls.get_user(db=db, user_id=user_id)
+
+        if await security.verify_password(update_data.password, user.hashed_password):
+            return False
+
+        hashed_password = await security.get_password_hash(update_data.password)
+        user.hashed_password = hashed_password
+
+        await db.commit()
+        await db.refresh(user)
+        return user
+
+    @classmethod
     async def delete_user(cls, db: AsyncSession, user_id: int):
         user = await cls.get_user(db=db, user_id=user_id)
         await db.delete(user)
         await db.commit()
 
     @classmethod
-    async def authenticate(cls, db: AsyncSession, login_data: SignIn) -> Optional[models.User]:
+    async def authenticate(cls, db: AsyncSession, login_data: schemas.SignIn) -> Optional[models.User]:
         user = await cls.get_user_by_email(db=db, email=login_data.email)
         if not user:
             return None

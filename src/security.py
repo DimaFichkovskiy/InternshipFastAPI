@@ -14,7 +14,7 @@ async def create_access_token(email: str, expires_delta: timedelta = None) -> st
         expire = datetime.utcnow() + timedelta(
             minutes=Config.ACCESS_TOKEN_EXPIRE_MINUTES
         )
-    to_encode = {"exp": expire, "email": email, "from": "me"}
+    to_encode = {"exp": expire, "email": email}
     encoded_jwt = jwt.encode(to_encode, Config.SECRET_KEY, algorithm=Config.ENCODE_ALGORITHM)
     return encoded_jwt
 
