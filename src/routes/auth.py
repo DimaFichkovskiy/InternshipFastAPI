@@ -3,7 +3,9 @@ import http.client
 from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
-from src import crud, schemas, models, security
+
+from src import schemas, models, security
+from src.crud import UserCRUD
 from src.database import AsyncSession, get_db_session
 from src.config import Config
 from src.routes.dependencies import get_current_user
@@ -19,7 +21,7 @@ router = APIRouter(
 
 @router.post("/login", status_code=200, response_model=schemas.Token)
 async def sign_in(user_login_data: schemas.SignIn, db: AsyncSession = Depends(get_db_session)) -> schemas.Token:
-    user = await crud.UserCRUD.authenticate(db=db, login_data=user_login_data)
+    user = await UserCRUD.authenticate(db=db, login_data=user_login_data)
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     access_token_expires = timedelta(minutes=Config.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -35,7 +37,7 @@ async def get_me(current_user: models.User = Depends(get_current_user)) -> schem
 
 @router.post("/register", status_code=201, response_model=schemas.Token)
 async def sign_up(new_user: schemas.SignUp, db: AsyncSession = Depends(get_db_session)) -> schemas.Token:
-    email_exist = await crud.UserCRUD.get_user_by_email(db, email=new_user.email)
+    email_exist = await UserCRUD.get_user_by_email(db, email=new_user.email)
     if email_exist:
         raise HTTPException(status_code=400, detail="Email already registered")
 
@@ -54,7 +56,7 @@ async def sign_up(new_user: schemas.SignUp, db: AsyncSession = Depends(get_db_se
     conn.request("POST", "/dbconnections/signup", pyload, headers)
     conn.getresponse()
 
-    user = await crud.UserCRUD.create_user(db=db, user=new_user)
+    user = await UserCRUD.create_user(db=db, user=new_user)
     access_token_expires = timedelta(minutes=Config.ACCESS_TOKEN_EXPIRE_MINUTES)
     token = await security.create_access_token(user.email, expires_delta=access_token_expires)
     schemas.Token.access_token = token

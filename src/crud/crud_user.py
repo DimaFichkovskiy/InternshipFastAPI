@@ -1,11 +1,8 @@
 from typing import Optional, List, Union
 from sqlalchemy import select
-from passlib.context import CryptContext
 
-from .database import AsyncSession
+from src.database import AsyncSession
 from src import models, security, schemas
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class UserCRUD:

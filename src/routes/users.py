@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_pagination import Page, paginate
 
-from src import crud, models, schemas
+from src import schemas
+from src.crud import UserCRUD
 from src.database import AsyncSession, get_db_session
 from src.routes.dependencies import get_current_user
 
@@ -19,7 +20,7 @@ async def read_users(
         db: AsyncSession = Depends(get_db_session),
         current_user: schemas.User = Depends(get_current_user)
 ):
-    users = await crud.UserCRUD.get_users(db, skip=skip, limit=limit)
+    users = await UserCRUD.get_users(db=db, skip=skip, limit=limit)
     return paginate(users)
 
 
@@ -29,7 +30,7 @@ async def read_user(
         db: AsyncSession = Depends(get_db_session),
         current_user: schemas.User = Depends(get_current_user)
 ):
-    user = await crud.UserCRUD.get_user(db, user_id=user_id)
+    user = await UserCRUD.get_user(db, user_id=user_id)
     if user is None:
         raise HTTPException(status_code=400, detail="User not found")
     return user
@@ -41,11 +42,10 @@ async def update_user_info(
         db: AsyncSession = Depends(get_db_session),
         current_user: schemas.User = Depends(get_current_user)
 ) -> schemas.User:
-    print(update_data)
     if (update_data.first_name and update_data.last_name) is None:
         raise HTTPException(status_code=400, detail="There is not enough data to update")
 
-    return await crud.UserCRUD.update_user_info(db=db, user_id=current_user.id, update_data=update_data)
+    return await UserCRUD.update_user_info(db=db, user_id=current_user.id, update_data=update_data)
 
 
 @router.patch("/update_user_password", response_model=schemas.UpdatePasswordResponse, status_code=201)
@@ -57,7 +57,7 @@ async def update_user_password(
     if update_data.password is None:
         raise HTTPException(status_code=400, detail="The password field must not be empty")
 
-    user = await crud.UserCRUD.update_user_password(db=db, user_id=current_user.id, update_data=update_data)
+    user = await UserCRUD.update_user_password(db=db, user_id=current_user.id, update_data=update_data)
     if not user:
         raise HTTPException(status_code=400, detail="The new password matches the old one")
 
@@ -71,7 +71,7 @@ async def update_user_password(
 async def delete_user(
         db: AsyncSession = Depends(get_db_session), current_user: schemas.User = Depends(get_current_user)
 ) -> schemas.DeleteUserResponse:
-    await crud.UserCRUD.delete_user(db=db, user_id=current_user.id)
+    await UserCRUD.delete_user(db=db, user_id=current_user.id)
 
     response = schemas.DeleteUserResponse
     response.status_code = status.HTTP_200_OK

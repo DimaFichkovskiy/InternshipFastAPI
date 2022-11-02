@@ -7,16 +7,21 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 
+from src import routes
 from src.config import Config
-from src.routes.auth import router as auth_router
-from src.routes.users import router as users_router
+from src.database import get_db_session
+# from src.routes.auth import router as auth_router
+# from src.routes.users import router as users_router
 
 db = databases.Database(Config.POSTGRES_URL)
 
 app = FastAPI()
 
-app.include_router(auth_router)
-app.include_router(users_router)
+app.include_router(routes.auth_router)
+app.include_router(routes.users_router)
+app.include_router(routes.company_router)
+app.include_router(routes.management_router)
+app.include_router(routes.notifications_router)
 
 add_pagination(app)
 

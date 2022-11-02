@@ -5,7 +5,7 @@ from fastapi.security import HTTPBearer
 from src.database import AsyncSession, get_db_session
 from src import models
 from src.utils import VerifyToken
-from src.crud import UserCRUD
+from src.crud.crud_user import UserCRUD
 
 
 token_auth_scheme = HTTPBearer()
