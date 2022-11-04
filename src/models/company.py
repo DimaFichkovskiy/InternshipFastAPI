@@ -13,7 +13,5 @@ class Company(Base):
     description = Column(String)
     hidden = Column(Boolean, default=False)
 
-    # users = relationship("User", secondary="workers", viewonly=True, lazy='selectin')
     workers = relationship("Worker", back_populates="company", lazy='selectin')
-    invites = relationship("Invite", back_populates="company", lazy='selectin')
     requests = relationship("Request", back_populates="company", lazy='selectin')

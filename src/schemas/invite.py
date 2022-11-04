@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from src.models.request import RequestFrom, RequestStatus
+
 
 class InviteFrom(BaseModel):
     id: int
@@ -8,6 +10,5 @@ class InviteFrom(BaseModel):
 
 class Invite(BaseModel):
     id: int
-    accepted: bool
-    rejected: bool
+    status: RequestStatus
     company: InviteFrom

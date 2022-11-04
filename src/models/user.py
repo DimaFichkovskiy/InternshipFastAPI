@@ -15,7 +15,5 @@ class User(Base):
     hashed_password = Column(String, default=None)
     date_created = Column(DateTime(timezone=True), default=func.now())
 
-    # companies = relationship("Company", secondary="workers", viewonly=True, lazy='selectin')
     workers = relationship("Worker", back_populates="user", lazy='selectin')
-    invites = relationship("Invite", back_populates="user", lazy='selectin')
     requests = relationship("Request", back_populates="user", lazy='selectin')

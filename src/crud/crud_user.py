@@ -1,5 +1,6 @@
 from typing import Optional, List, Union
 from sqlalchemy import select
+from fastapi import HTTPException
 
 from src.database import AsyncSession
 from src import models, security, schemas
@@ -15,7 +16,10 @@ class UserCRUD:
     @classmethod
     async def get_user(cls, db: AsyncSession, user_id: int) -> models.User:
         result = await db.execute(select(models.User).filter(models.User.id == user_id))
-        return result.scalars().first()
+        result = result.scalars().first()
+        if result is None:
+            raise HTTPException(status_code=404, detail="Not Found User")
+        return result
 
     @classmethod
     async def get_user_by_email(cls, db: AsyncSession, email: str) -> models.User:

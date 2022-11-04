@@ -13,7 +13,5 @@ class RequestTo(BaseModel):
 
 class Request(BaseModel):
     id: int
-    accepted: bool
-    rejected: bool
     from_user: RequestFrom
     to_company: RequestTo

@@ -1,7 +1,15 @@
-from sqlalchemy import Column, Integer, ForeignKey, Boolean
+import enum
+
+from sqlalchemy import Column, Integer, ForeignKey, Enum
 from sqlalchemy.orm import relationship, backref
 
 from src.database import Base
+
+
+class Role(enum.Enum):
+    owner = 2
+    admin = 1
+    staff = 0
 
 
 class Worker(Base):
@@ -10,11 +18,8 @@ class Worker(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     company_id = Column(Integer, ForeignKey("companies.id"))
-    is_owner = Column(Boolean, default=False)
-    is_admin = Column(Boolean, default=False)
+    role = Column(Enum(Role), default=Role.staff)
 
-    # user = relationship("User", backref=backref("order_products", cascade="all, delete-orphan"), lazy='selectin')
-    # company = relationship("Company", backref=backref("order_products", cascade="all, delete-orphan"), lazy='selectin')
     user = relationship("User", back_populates="workers", lazy='selectin')
     company = relationship("Company", back_populates="workers", lazy='selectin')
 
