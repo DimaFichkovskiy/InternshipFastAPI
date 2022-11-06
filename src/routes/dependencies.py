@@ -13,7 +13,7 @@ token_auth_scheme = HTTPBearer()
 
 async def get_current_user(
         response: Response,
-        db: AsyncSession = Depends(get_db_session),
+        user_crud: UserCRUD = Depends(),\
         token: str = Depends(token_auth_scheme)
 ) -> Union[models.User, Response]:
     pyload_from_auth = await VerifyToken(token.credentials).verify_token_from_auth0()
@@ -24,12 +24,12 @@ async def get_current_user(
             response.status_code = status.HTTP_400_BAD_REQUEST
             return response
 
-        user = await UserCRUD.get_user_by_email(db=db, email=pyload_from_me.get("email"))
+        user = await user_crud.get_user_by_email(email=pyload_from_me.get("email"))
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         return user
 
-    user = await UserCRUD.get_user_by_email(db=db, email=pyload_from_auth.get("email"))
+    user = await user_crud.get_user_by_email(email=pyload_from_auth.get("email"))
     if not user:
-        user = await UserCRUD.create_user_by_email(db=db, email=pyload_from_auth.get("email"))
+        user = await user_crud.create_user_by_email(email=pyload_from_auth.get("email"))
     return user

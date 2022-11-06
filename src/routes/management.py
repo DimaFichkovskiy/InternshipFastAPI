@@ -19,11 +19,10 @@ async def create_invite_to_company(
         company_id: int,
         user_id: int,
         management_crud: ManagementCRUD = Depends(),
-        db: AsyncSession = Depends(get_db_session),
         current_user: models.User = Depends(get_current_user)
 ) -> schemas.Response:
     await management_crud.create_invite(
-        db=db, user_id=user_id, company_id=company_id, owner_id=current_user.id
+        user_id=user_id, company_id=company_id, owner_id=current_user.id
     )
     return schemas.Response(
         status_code=status.HTTP_201_CREATED,
@@ -36,15 +35,14 @@ async def accept_invite_to_company(
         invite_id: int,
         company_crud: CompanyCRUD = Depends(),
         management_crud: ManagementCRUD = Depends(),
-        db: AsyncSession = Depends(get_db_session),
         current_user: models.User = Depends(get_current_user)
 ) -> schemas.Response:
     result_update = await management_crud.update_invite(
-        db=db, invite_id=invite_id, user_id=current_user.id, status=RequestStatus.accepted
+        invite_id=invite_id, user_id=current_user.id, status=RequestStatus.accepted
     )
-    company = await company_crud.get_company_by_id(db=db, company_id=result_update.company_id)
+    company = await company_crud.get_company_by_id(company_id=result_update.company_id)
     await company_crud.create_worker_in_company(
-        db=db, company=company, user=current_user, role=Role.staff
+        company=company, user=current_user, role=Role.staff
     )
 
     return schemas.Response(
@@ -57,11 +55,10 @@ async def accept_invite_to_company(
 async def cancel_invite_to_company(
         invite_id: int,
         management_crud: ManagementCRUD = Depends(),
-        db: AsyncSession = Depends(get_db_session),
         current_user: models.User = Depends(get_current_user)
 ) -> schemas.Response:
     await management_crud.update_invite(
-        db=db, invite_id=invite_id, user_id=current_user.id, status=RequestStatus.rejected
+        invite_id=invite_id, user_id=current_user.id, status=RequestStatus.rejected
     )
 
     return schemas.Response(
@@ -75,11 +72,10 @@ async def assign_admin_to_company(
         user_id: int,
         company_id: int,
         company_crud: CompanyCRUD = Depends(),
-        db: AsyncSession = Depends(get_db_session),
         current_user: models.User = Depends(get_current_user)
 ) -> schemas.Response:
     await company_crud.update_worker_admin(
-        db=db, user_id=user_id, company_id=company_id, owner_id=current_user.id, role=Role.admin
+        user_id=user_id, company_id=company_id, owner_id=current_user.id, role=Role.admin
     )
     return schemas.Response(
         status_code=status.HTTP_201_CREATED,
@@ -92,11 +88,10 @@ async def remove_admin_from_company(
         user_id: int,
         company_id: int,
         company_crud: CompanyCRUD = Depends(),
-        db: AsyncSession = Depends(get_db_session),
         current_user: models.User = Depends(get_current_user)
 ):
     await company_crud.update_worker_admin(
-        db=db, user_id=user_id, company_id=company_id, owner_id=current_user.id, role=Role.staff
+        user_id=user_id, company_id=company_id, owner_id=current_user.id, role=Role.staff
     )
     return schemas.Response(
         status_code=status.HTTP_201_CREATED,
@@ -108,11 +103,10 @@ async def remove_admin_from_company(
 async def apply_to_join_the_company(
         company_id: int,
         management_crud: ManagementCRUD = Depends(),
-        db: AsyncSession = Depends(get_db_session),
         current_user: models.User = Depends(get_current_user)
 ) -> schemas.Response:
     await management_crud.create_request(
-        db=db, user_id=current_user.id, company_id=company_id
+        user_id=current_user.id, company_id=company_id
     )
     return schemas.Response(
         status_code=status.HTTP_201_CREATED,
@@ -125,15 +119,14 @@ async def accept_joining_to_company(
         request_id: int,
         company_crud: CompanyCRUD = Depends(),
         management_crud: ManagementCRUD = Depends(),
-        db: AsyncSession = Depends(get_db_session),
         current_user: models.User = Depends(get_current_user)
 ) -> schemas.Response:
     result_update = await management_crud.update_request(
-        db=db, request_id=request_id, owner_id=current_user.id, status=RequestStatus.accepted
+        request_id=request_id, owner_id=current_user.id, status=RequestStatus.accepted
     )
-    company = await company_crud.get_company_by_id(db=db, company_id=result_update.company_id)
+    company = await company_crud.get_company_by_id(company_id=result_update.company_id)
     await company_crud.create_worker_in_company(
-        db=db, company=company, user=result_update.user, role=Role.staff
+        company=company, user=result_update.user, role=Role.staff
     )
     return schemas.Response(
         status_code=status.HTTP_201_CREATED,
@@ -145,11 +138,10 @@ async def accept_joining_to_company(
 async def cancel_joining_to_company(
         request_id: int,
         management_crud: ManagementCRUD = Depends(),
-        db: AsyncSession = Depends(get_db_session),
         current_user: models.User = Depends(get_current_user)
 ):
     await management_crud.update_request(
-        db=db, request_id=request_id, owner_id=current_user.id, status=RequestStatus.rejected
+        request_id=request_id, owner_id=current_user.id, status=RequestStatus.rejected
     )
     return schemas.Response(
         status_code=status.HTTP_201_CREATED,
@@ -162,11 +154,10 @@ async def delete_worker_from_company(
         company_id: int,
         user_id: int,
         company_crud: CompanyCRUD = Depends(),
-        db: AsyncSession = Depends(get_db_session),
         current_user: models.User = Depends(get_current_user)
 ):
     await company_crud.delete_worker(
-        db=db, company_id=company_id, user_id=user_id, owner_id=current_user.id
+        company_id=company_id, user_id=user_id, owner_id=current_user.id
     )
     return schemas.Response(
         status_code=status.HTTP_200_OK,
