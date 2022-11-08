@@ -19,3 +19,4 @@ from .management import CreateInvite
 from .worker import Worker
 from .invite import Invite, InviteFrom
 from .request import Request, RequestFrom, RequestTo
+from .quiz import Quiz, CreateQuiz, Question, AnswerResponse, QuestionsResponse, QuizResponse
