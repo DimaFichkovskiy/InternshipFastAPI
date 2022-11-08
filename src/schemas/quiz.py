@@ -20,6 +20,7 @@ class Quiz(BaseModel):
     title: str
     description: str
     passing_frequency: int
+    number_of_questions: int
 
     class Config:
         orm_mode = True
@@ -61,6 +62,7 @@ class QuizResponse(BaseModel):
     title: str
     description: str
     passing_frequency: int
+    number_of_questions: int
     list_questions: List[QuestionsResponse]
 
     class Config:

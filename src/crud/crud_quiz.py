@@ -39,7 +39,7 @@ class QuizCrud:
     async def get_quiz_by_id(self, quiz_id: int) -> models.Quiz:
         result = await self.db.execute(select(models.Quiz).filter(models.Quiz.id == quiz_id))
         result = result.scalars().first()
-        if result is None:
+        if not result:
             raise HTTPException(status_code=404, detail="Not Found Quiz")
         return result
 
@@ -52,7 +52,7 @@ class QuizCrud:
             (models.Question.id == question_id) & (models.Question.quiz_id == quiz_id)
         ))
         result = result.scalars().first()
-        if result is None:
+        if not result:
             raise HTTPException(status_code=404, detail="Not Found Question")
         return result
 
@@ -77,6 +77,7 @@ class QuizCrud:
             title=quiz_data.title,
             description=quiz_data.description,
             passing_frequency=quiz_data.passing_frequency,
+            number_of_questions=len(quiz_data.list_questions),
             company=company
         )
 
@@ -84,18 +85,15 @@ class QuizCrud:
         await self.db.commit()
         await self.db.refresh(quiz)
 
-        quiz_id = quiz.id
-        quiz_title = quiz.title
-        quiz_description = quiz.description
-        quiz_passing_frequency = quiz.passing_frequency
-
         questions = await self.create_questions_to_quiz(questions_data=quiz_data.list_questions, quiz=quiz)
 
+        await self.db.refresh(quiz)
         return schemas.QuizResponse(
-            id=quiz_id,
-            title=quiz_title,
-            description=quiz_description,
-            passing_frequency=quiz_passing_frequency,
+            id=quiz.id,
+            title=quiz.title,
+            description=quiz.description,
+            passing_frequency=quiz.passing_frequency,
+            number_of_questions=quiz.number_of_questions,
             list_questions=questions
         )
 
@@ -168,18 +166,21 @@ class QuizCrud:
         await self.check_main_role_by_user_id_and_company_id(user_id=user_id, company_id=company_id)
 
         quiz = await self.get_quiz_by_id(quiz_id=quiz_id)
-        quiz_id = quiz.id
-        quiz_title = quiz.title
-        quiz_description = quiz.description
-        quiz_passing_frequency = quiz.passing_frequency
 
         questions = await self.create_questions_to_quiz(questions_data=questions_data, quiz=quiz)
 
+        await self.db.refresh(quiz)
+        quiz.number_of_questions += len(questions)
+
+        await self.db.commit()
+        await self.db.refresh(quiz)
+
         return schemas.QuizResponse(
-            id=quiz_id,
-            title=quiz_title,
-            description=quiz_description,
-            passing_frequency=quiz_passing_frequency,
+            id=quiz.id,
+            title=quiz.title,
+            description=quiz.description,
+            passing_frequency=quiz.passing_frequency,
+            number_of_questions=quiz.number_of_questions,
             list_questions=questions
         )
 
@@ -189,13 +190,15 @@ class QuizCrud:
         await self.check_main_role_by_user_id_and_company_id(user_id=user_id, company_id=company_id)
 
         quiz = await self.get_quiz_by_id(quiz_id=quiz_id)
-        quiz_id = quiz.id
-        quiz_title = quiz.title
-        quiz_description = quiz.description
-        quiz_passing_frequency = quiz.passing_frequency
 
         await self.delete_answers_by_question_id(question_id=question_id)
         await self.delete_question_by_id_and_quiz_id(question_id=question_id, quiz_id=quiz_id)
+
+        await self.db.refresh(quiz)
+        quiz.number_of_questions -= 1
+
+        await self.db.commit()
+        await self.db.refresh(quiz)
 
         questions_list = list()
         questions = await self.get_questions_by_quiz_id(quiz_id=quiz_id)
@@ -208,11 +211,12 @@ class QuizCrud:
             )
 
         return schemas.QuizResponse(
-            id=quiz_id,
-            title=quiz_title,
-            description=quiz_description,
-            passing_frequency=quiz_passing_frequency,
-            list_questions=questions_list
+            id=quiz.id,
+            title=quiz.title,
+            description=quiz.description,
+            passing_frequency=quiz.passing_frequency,
+            list_questions=questions_list,
+            number_of_questions=quiz.number_of_questions
         )
 
     async def delete_quiz(self, user_id: int, company_id: int, quiz_id: int):

@@ -13,6 +13,7 @@ class Quiz(Base):
     title = Column(String)
     description = Column(String)
     passing_frequency = Column(Integer)
+    number_of_questions = Column(Integer)
 
     company = relationship("Company", back_populates="quizzes")
     questions = relationship("Question", back_populates="quiz")
