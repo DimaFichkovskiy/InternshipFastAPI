@@ -17,3 +17,4 @@ class User(Base):
 
     workers = relationship("Worker", back_populates="user", lazy='selectin')
     requests = relationship("Request", back_populates="user", lazy='selectin')
+    general_results = relationship("GeneralResult", back_populates="user", lazy='selectin')
