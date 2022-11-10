@@ -67,3 +67,18 @@ class QuizResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class AnswersFromUser(BaseModel):
+    question_id: int
+    answer_id: int
+
+
+class TestResponse(BaseModel):
+    quiz_id: int
+    number_of_questions: int
+    correct_answers: int
+    gpa: float
+
+    class Config:
+        orm_mode = True

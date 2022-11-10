@@ -16,3 +16,4 @@ class Company(Base):
     workers = relationship("Worker", back_populates="company", lazy='selectin')
     requests = relationship("Request", back_populates="company", lazy='selectin')
     quizzes = relationship("Quiz", back_populates="company", lazy='selectin')
+    general_results = relationship("GeneralResult", back_populates="company", lazy='selectin')

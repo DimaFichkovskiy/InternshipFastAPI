@@ -62,6 +62,12 @@ class QuizCrud:
         ))
         return result.scalars().all()
 
+    async def get_correct_answers_by_quiz_id(self, quiz_id: int) -> List[models.Answer]:
+        result = await self.db.execute(select(models.Answer).join(models.Question).join(models.Quiz).filter(
+            (models.Quiz.id == quiz_id) & (models.Answer.is_correct == True)
+        ))
+        return result.scalars().all()
+
     async def get_answers_by_question_id(self, question_id: int) -> List[models.Answer]:
         result = await self.db.execute(select(models.Answer).filter(models.Answer.question_id == question_id))
         return result.scalars().all()

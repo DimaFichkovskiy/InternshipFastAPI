@@ -23,6 +23,7 @@ app.include_router(routes.company_router)
 app.include_router(routes.management_router)
 app.include_router(routes.notifications_router)
 app.include_router(routes.quiz_router)
+app.include_router(routes.workflow_router)
 
 add_pagination(app)
 
