@@ -64,6 +64,7 @@ class QuizResult(Base):
     quiz_id = Column(Integer, ForeignKey("quizzes.id"))
     general_result_id = Column(Integer, ForeignKey("general_results.id"))
     correct_answers = Column(Integer)
+    gpa = Column(Float)
     date_of_passage = Column(DateTime(timezone=True), default=func.now())
 
     quiz = relationship("Quiz", back_populates="quizzes_results", lazy='selectin')

@@ -22,5 +22,6 @@ from .request import Request, RequestFrom, RequestTo
 from .quiz import (
     Quiz, CreateQuiz, Question, AnswerResponse,
     QuestionsResponse, QuizResponse, TestResponse,
-    AnswersFromUser
+    AnswersFromUser, UserGPAResponse, UserGPAQuizResponse,
+    UserWithTimeOfLastTestResponse, MyGPA, QuizWithTimeOfLastTestResponse
 )
