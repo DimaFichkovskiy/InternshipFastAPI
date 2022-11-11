@@ -168,7 +168,7 @@ class WorkflowCrud:
 
         return result
 
-    async def get_user_quizzes(self, user_id: int, company_id: int, time: datetime):
+    async def get_user_quizzes(self, user_id: int, company_id: int, time: datetime) -> List[models.QuizResult]:
         result = await self.db.execute(select(models.QuizResult).join(models.GeneralResult).filter(
             (models.GeneralResult.user_id == user_id) &
             (models.GeneralResult.company_id == company_id) &
