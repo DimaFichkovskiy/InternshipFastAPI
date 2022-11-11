@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, validator
 from fastapi import HTTPException
+from datetime import datetime
 
 
 class Question(BaseModel):
@@ -82,3 +83,29 @@ class TestResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class UserGPAResponse(BaseModel):
+    user_id: int
+    gpa: float
+
+
+class UserGPAQuizResponse(BaseModel):
+    user_id: int
+    quiz_id: int
+    gpa: float
+
+
+class UserWithTimeOfLastTestResponse(BaseModel):
+    user_id: int
+    time: Optional[datetime] = None
+
+
+class MyGPA(BaseModel):
+    company_id: int
+    gpa: float
+
+
+class QuizWithTimeOfLastTestResponse(BaseModel):
+    quiz_id: int
+    time: datetime

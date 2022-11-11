@@ -31,6 +31,10 @@ class CompanyCRUD:
         ).offset(skip).limit(limit))
         return result.scalars().all()
 
+    async def get_workers_by_company_id(self, company_id: int) -> List[models.Worker]:
+        result = await self.db.execute(select(models.Worker).filter(models.Worker.company_id == company_id))
+        return result.scalars().all()
+
     async def get_owner_by_company_id(self, company_id: int) -> models.User:
         result = await self.db.execute(select(models.User).join(models.Worker).filter(
             (models.Worker.company_id == company_id) & (models.Worker.role == Role.owner)
@@ -42,6 +46,17 @@ class CompanyCRUD:
             (models.Worker.user_id == user_id) & (models.Worker.role == Role.owner)
         ))
         return result.scalars().all()
+
+    async def get_company_where_im_owner_or_admin_by_company_id(self, company_id: int, user_id: int) -> models.Company:
+        result = await self.db.execute(select(models.Company).join(models.Worker).filter(
+            (models.Company.id == company_id) &
+            (models.Worker.user_id == user_id) &
+            ((models.Worker.role == Role.owner) | (models.Worker.role == Role.admin))
+        ))
+        result = result.scalars().first()
+        if not result:
+            raise HTTPException(status_code=404, detail="You are not owner or admin in this company")
+        return result
 
     async def get_worker_by_user_id_and_company_id(self, user_id: int, company_id: int) -> models.Worker:
         result = await self.db.execute(select(models.Worker).filter(
